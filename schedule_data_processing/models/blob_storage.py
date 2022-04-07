@@ -1,5 +1,6 @@
 from azure.storage.blob import BlobClient
 from .configuration_manager import ConfigManager
+from exceptions.exceptions import BlobClientException
 
 
 class BlobStorage:
@@ -15,6 +16,10 @@ class BlobStorage:
                f"AccountKey={self.__account_key};EndpointSuffix={self.__endpoint_suffix}")
 
     def get_client(self, container_name, blob_name):
-        client = BlobClient.from_connection_string(conn_str=self._get_connection_url(),
-                                                   container_name=container_name, blob_name=blob_name)
-        return client
+        try:
+            client = BlobClient.from_connection_string(conn_str=self._get_connection_url(),
+                                                       container_name=container_name, blob_name=blob_name)
+            return client
+        except Exception as e:
+            msg = f"Error while creating blob client. Message: {e}"
+            raise BlobClientException(msg)
