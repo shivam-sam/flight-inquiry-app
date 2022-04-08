@@ -2,7 +2,8 @@ from .inquiry_service import InquiryService
 import json
 import logging
 from exceptions.exceptions import InvalidCommandException
-import pandas as pd
+from utils.common_utils import get_distance_flown_in_nautical_miles
+from utils.common_utils import reformat_datetime_to_string
 
 
 class DriverService:
@@ -25,7 +26,8 @@ class DriverService:
         "TypeName",
         "Total",
         "Hub",
-        "Haul"
+        "Haul",
+        "distance_nm",
     ]
 
     date_columns = [
@@ -61,17 +63,24 @@ class DriverService:
         self._logger.info(f"STARTED - Lookup. Flight numbers: {flight_numbers}")
         schedule = self.inquiry_service.get_schedule()
         fleet = self.inquiry_service.get_fleet()
+        airports = self.inquiry_service.get_airports()
 
         try:
             fleet["aircraft_registration"] = fleet["Reg"]
             joined = schedule.merge(fleet, on="aircraft_registration")
-            result = joined[joined["flight_number"].isin(flight_numbers)][self.required_lookup_columns]
+            airports["departure_airport"] = airports["Airport"]
+            joined = joined.merge(airports, on="departure_airport", suffixes=(None, "_departure"))
+            airports["arrival_airport"] = airports["Airport"]
+            joined = joined.merge(airports, on="arrival_airport", suffixes=(None, "_arrival"))
+            joined.drop(columns=["departure_airport_arrival"], inplace=True)
+            joined = joined[joined["flight_number"].isin(flight_numbers)]
+            joined[self.date_columns] = joined[self.date_columns].apply(func=reformat_datetime_to_string, axis=1)
+            joined["distance_nm"] = joined.apply(func=get_distance_flown_in_nautical_miles, axis=1)
+            result = joined[self.required_lookup_columns]
         except KeyError as msg:
             msg = f"FAILED - Lookup. {msg} - column not found"
             self._logger.error(msg)
             return msg
-        for column in self.date_columns:
-            result[column] = result[column].dt.strftime('%Y-%m-%d %H:%M:%S')
         flight_numbers_not_found = set(flight_numbers) - set(result['flight_number'].values)
         result = result.to_dict("records")
         for invalid_flight_number in flight_numbers_not_found:
@@ -97,6 +106,7 @@ class DriverService:
             airports["arrival_airport"] = airports["Airport"]
             joined = joined.merge(airports, on="arrival_airport", suffixes=(None, "_arrival"))
             joined.drop(columns=["departure_airport_arrival"], inplace=True)
+            joined["distance_nm"] = joined.apply(func=get_distance_flown_in_nautical_miles, axis=1)
         except KeyError as msg:
             msg = f"FAILED - Merge. {msg} - column not found"
             self._logger.error(msg)
@@ -110,7 +120,7 @@ class DriverService:
         Method to fetch/generate information based on command and arguments passed.
 
         :param args:
-            List of arguments.
+            List of arguments containing command and flight numbers if required.
         """
         try:
             command = args[1].lower()
@@ -133,5 +143,8 @@ class DriverService:
             return msg
         except IndexError:
             msg = "Command not specified"
+            self._logger.error(msg)
+            return msg
+        except Exception as msg:
             self._logger.error(msg)
             return msg
