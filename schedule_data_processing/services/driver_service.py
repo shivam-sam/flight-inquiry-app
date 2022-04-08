@@ -2,6 +2,7 @@ from .inquiry_service import InquiryService
 import json
 import logging
 from exceptions.exceptions import InvalidCommandException
+import pandas as pd
 
 
 class DriverService:
@@ -71,7 +72,10 @@ class DriverService:
             return msg
         for column in self.date_columns:
             result[column] = result[column].dt.strftime('%Y-%m-%d %H:%M:%S')
+        flight_numbers_not_found = set(flight_numbers) - set(result['flight_number'].values)
         result = result.to_dict("records")
+        for invalid_flight_number in flight_numbers_not_found:
+            result.append({"flight_number": f"{invalid_flight_number}", "error": "Flight not found in schedule"})
         response = json.dumps(result)
         self._logger.info(f"SUCCESS - Lookup. Response: {response}")
         return response

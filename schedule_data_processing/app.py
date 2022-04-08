@@ -14,5 +14,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # print(main(['schedule_data_processing/app.py', 'lookup', 'ZG2361,ZG2362']))
+    # print(main(['schedule_data_processing/app.py', 'lookup', 'ZG2361,ZG2362,AAAAAA,CCCCC']))
     print(main(sys.argv))
