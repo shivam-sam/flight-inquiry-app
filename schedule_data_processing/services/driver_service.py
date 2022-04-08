@@ -5,10 +5,13 @@ from exceptions.exceptions import InvalidCommandException
 
 
 class DriverService:
+    """
+    A driver class to perform actions based on user specific command.
+    """
 
     _logger = logging.getLogger(__name__)
 
-    Required_Columns = [
+    required_lookup_columns = [
         "aircraft_registration",
         "departure_airport",
         "arrival_airport",
@@ -24,7 +27,7 @@ class DriverService:
         "Haul"
     ]
 
-    Date_columns = [
+    date_columns = [
         "scheduled_departure_time",
         "scheduled_takeoff_time",
         "scheduled_landing_time",
@@ -37,6 +40,9 @@ class DriverService:
         self.inquiry_service.set_data()
 
     def __configure_logger(self):
+        """
+        Configures the logger object.
+        """
         self._logger.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s - %(name)s(%(lineno)s) - <<%(levelname)s>> - %(message)s')
         file_handler = logging.FileHandler('log.txt')
@@ -44,6 +50,13 @@ class DriverService:
         self._logger.addHandler(file_handler)
 
     def lookup(self, flight_numbers):
+        """
+        Method to fetch information based on flight numbers.
+
+        :param flight_numbers:
+            Flight number(s) passed a list.
+        :returns: A json response containing single record for each flight number.
+        """
         self._logger.info(f"STARTED - Lookup. Flight numbers: {flight_numbers}")
         schedule = self.inquiry_service.get_schedule()
         fleet = self.inquiry_service.get_fleet()
@@ -51,12 +64,12 @@ class DriverService:
         try:
             fleet["aircraft_registration"] = fleet["Reg"]
             joined = schedule.merge(fleet, on="aircraft_registration")
-            result = joined[joined["flight_number"].isin(flight_numbers)][self.Required_Columns]
+            result = joined[joined["flight_number"].isin(flight_numbers)][self.required_lookup_columns]
         except KeyError as msg:
             msg = f"FAILED - Lookup. {msg} - column not found"
             self._logger.error(msg)
             return msg
-        for column in self.Date_columns:
+        for column in self.date_columns:
             result[column] = result[column].dt.strftime('%Y-%m-%d %H:%M:%S')
         result = result.to_dict("records")
         response = json.dumps(result)
@@ -64,6 +77,9 @@ class DriverService:
         return response
 
     def merge(self):
+        """
+        Method to generate a merge csv files.
+        """
         self._logger.info(f"STARTED - Merge")
         schedule = self.inquiry_service.get_schedule()
         airports = self.inquiry_service.get_airports()
@@ -86,6 +102,12 @@ class DriverService:
         return "Output File name: output.csv"
 
     def fetch_info(self, args):
+        """
+        Method to fetch/generate information based on command and arguments passed.
+
+        :param args:
+            List of arguments.
+        """
         try:
             command = args[1].lower()
 

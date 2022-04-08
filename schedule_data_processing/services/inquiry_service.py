@@ -2,6 +2,9 @@ from .data_service import DataService
 
 
 class InquiryService:
+    """
+    A class to store the blob data.
+    """
 
     def __init__(self):
         self.data_service = DataService()

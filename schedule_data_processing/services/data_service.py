@@ -6,11 +6,24 @@ from exceptions.exceptions import BlobClientException, BlobDataFetchException
 
 
 class DataService:
+    """
+    A class to interact with blob store.
+    """
 
     def __init__(self):
         self.blob_storage = BlobStorage()
 
     def fetch_data_from_blob_store(self, container_name, blob_name):
+        """
+        Main function to create instance of blob client and then download the remote data to local temporary file.
+
+        :param container_name:
+            Describe blob container in the blob store.
+        :param blob_name:
+            Describe blob name inside the container.
+
+        :returns: Pandas dataframe object with respective data.
+        """
         data = pd.DataFrame()
         try:
             blob_client = self.blob_storage.get_client(container_name=container_name, blob_name=blob_name)
@@ -22,5 +35,5 @@ class DataService:
         except BlobClientException as msg:
             return BlobDataFetchException(msg)
         finally:
-            cleanup_temp_files("schedule.json", "fleet.csv", "airports.csv")
+            cleanup_temp_files(blob_name)
         return data
