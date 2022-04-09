@@ -1,6 +1,7 @@
 from azure.storage.blob import BlobClient
-from .configuration_manager import ConfigManager
+
 from exceptions.exceptions import BlobClientException
+from .configuration_manager import ConfigManager
 
 
 class BlobStorage:

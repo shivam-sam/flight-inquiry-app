@@ -1,6 +1,8 @@
 import os
-from exceptions.exceptions import BlobClientException
+
 from geopy.distance import geodesic
+
+from exceptions.exceptions import BlobClientException
 
 
 def cleanup_temp_files(*file_paths):

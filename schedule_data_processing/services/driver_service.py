@@ -1,9 +1,10 @@
-from .inquiry_service import InquiryService
 import json
 import logging
+
 from exceptions.exceptions import InvalidCommandException
 from utils.common_utils import get_distance_flown_in_nautical_miles
 from utils.common_utils import reformat_datetime_to_string
+from .inquiry_service import InquiryService
 
 
 class DriverService:
