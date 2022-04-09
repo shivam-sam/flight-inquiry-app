@@ -47,7 +47,7 @@ def get_distance_flown_in_nautical_miles(row):
     coordinate1 = (row.Lat, row.Lon)
     coordinate2 = (row.Lat_arrival, row.Lon_arrival)
     distance_in_nautical_miles = geodesic(coordinate1, coordinate2).nm
-    return distance_in_nautical_miles
+    return round(distance_in_nautical_miles, 2)
 
 
 def reformat_datetime_to_string(row, format="%Y-%m-%d %H:%M:%S"):

@@ -80,7 +80,14 @@ class DriverService:
                 airports, on="arrival_airport", suffixes=(None, "_arrival")
             )
             joined.drop(columns=["departure_airport_arrival"], inplace=True)
+
             joined = joined[joined["flight_number"].isin(flight_numbers)]
+            if joined.size == 0:
+                result = self.handle_invalid_flight(flight_numbers)
+                response = json.dumps(result)
+                self._logger.warning(f"CAUTION - Lookup. All flights invalid. Response: {response}")
+                return response
+
             joined[self.date_columns] = joined[self.date_columns].apply(
                 func=reformat_datetime_to_string, axis=1
             )
@@ -96,13 +103,7 @@ class DriverService:
             result["flight_number"].values
         )
         result = result.to_dict("records")
-        for invalid_flight_number in flight_numbers_not_found:
-            result.append(
-                {
-                    "flight_number": f"{invalid_flight_number}",
-                    "error": "Flight not found in schedule",
-                }
-            )
+        result.extend(self.handle_invalid_flight(flight_numbers_not_found))
         response = json.dumps(result)
         self._logger.info(f"SUCCESS - Lookup. Response: {response}")
         return response
@@ -138,6 +139,24 @@ class DriverService:
         joined.to_csv("output.csv")
         self._logger.info(f"SUCCESS - Merge. Output File name: output.csv")
         return "Output File name: output.csv"
+
+    @staticmethod
+    def handle_invalid_flight(invalid_flights):
+        """
+        Method to handle invalid flight numbers passed to lookup method.
+
+        :param invalid_flights:
+            List of invalid flight numbers.
+        """
+        invalid_flight_response = []
+        for invalid_flight_number in invalid_flights:
+            invalid_flight_response.append(
+                {
+                    "flight_number": f"{invalid_flight_number}",
+                    "error": "Flight not found in schedule",
+                }
+            )
+        return invalid_flight_response
 
     def fetch_info(self, args):
         """
