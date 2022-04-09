@@ -14,5 +14,9 @@ def main(args):
 
 if __name__ == "__main__":
     # print(main(['schedule_data_processing/app.py', 'lookup', 'ZG2361,ZG5001,AAAAAA,CCCCC']))
-    # print(main(['schedule_data_processing/app.py', 'lookup', 'ZG23618766875']))
+    # print(main(['schedule_data_processing/app.py', 'lookup', 'ZG2361ZG5001,AAAAAA,CCCCC']))
+    # print(main(['schedule_data_processing/app.py', 'lookup']))
+    # print(main(['schedule_data_processing/app.py', 'merge']))
+    # print(main(['schedule_data_processing/app.py', 'jarvis']))
+    # print(main(['schedule_data_processing/app.py']))
     print(main(sys.argv))
