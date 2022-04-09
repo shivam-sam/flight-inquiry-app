@@ -4,7 +4,9 @@ import logging
 from exceptions.exceptions import InvalidCommandException
 from utils.common_utils import get_distance_flown_in_nautical_miles
 from utils.common_utils import reformat_datetime_to_string
-from .inquiry_service import InquiryService
+from services.inquiry_service import InquiryService
+from constants.constants import (FleetDataColumns, AirportDataColumns, ScheduleDataColumns, MergedDataColumns)
+from constants.constants import AvailableInquiryCommands
 
 
 class DriverService:
@@ -15,27 +17,27 @@ class DriverService:
     _logger = logging.getLogger(__name__)
 
     required_lookup_columns = [
-        "aircraft_registration",
-        "departure_airport",
-        "arrival_airport",
-        "scheduled_departure_time",
-        "scheduled_takeoff_time",
-        "scheduled_landing_time",
-        "scheduled_arrival_time",
-        "flight_number",
-        "IATATypeDesignator",
-        "TypeName",
-        "Total",
-        "Hub",
-        "Haul",
-        "distance_nm",
+        FleetDataColumns.AIRCRAFT_REGISTRATION.value,
+        AirportDataColumns.DEPARTURE_AIRPORT.value,
+        AirportDataColumns.ARRIVAL_AIRPORT.value,
+        ScheduleDataColumns.SCHEDULED_DEPARTURE_TIME.value,
+        ScheduleDataColumns.SCHEDULED_TAKEOFF_TIME.value,
+        ScheduleDataColumns.SCHEDULED_LANDING_TIME.value,
+        ScheduleDataColumns.SCHEDULED_ARRIVAL_TIME.value,
+        ScheduleDataColumns.FLIGHT_NUMBER.value,
+        FleetDataColumns.IATA_TYPE_DESIGNATOR.value,
+        FleetDataColumns.TYPE_NAME.value,
+        FleetDataColumns.TOTAL.value,
+        FleetDataColumns.HUB.value,
+        FleetDataColumns.HAUL.value,
+        MergedDataColumns.DISTANCE_IN_NM.value,
     ]
 
     date_columns = [
-        "scheduled_departure_time",
-        "scheduled_takeoff_time",
-        "scheduled_landing_time",
-        "scheduled_arrival_time",
+        ScheduleDataColumns.SCHEDULED_DEPARTURE_TIME.value,
+        ScheduleDataColumns.SCHEDULED_TAKEOFF_TIME.value,
+        ScheduleDataColumns.SCHEDULED_LANDING_TIME.value,
+        ScheduleDataColumns.SCHEDULED_ARRIVAL_TIME.value,
     ]
 
     def __init__(self):
@@ -69,19 +71,19 @@ class DriverService:
         airports = self.inquiry_service.get_airports()
 
         try:
-            fleet["aircraft_registration"] = fleet["Reg"]
-            joined = schedule.merge(fleet, on="aircraft_registration")
-            airports["departure_airport"] = airports["Airport"]
+            fleet[FleetDataColumns.AIRCRAFT_REGISTRATION.value] = fleet[FleetDataColumns.REG.value]
+            joined = schedule.merge(fleet, on=FleetDataColumns.AIRCRAFT_REGISTRATION.value)
+            airports[AirportDataColumns.DEPARTURE_AIRPORT.value] = airports[AirportDataColumns.AIRPORT.value]
             joined = joined.merge(
-                airports, on="departure_airport", suffixes=(None, "_departure")
+                airports, on=AirportDataColumns.DEPARTURE_AIRPORT.value, suffixes=(None, "_departure")
             )
-            airports["arrival_airport"] = airports["Airport"]
+            airports[AirportDataColumns.ARRIVAL_AIRPORT.value] = airports[AirportDataColumns.AIRPORT.value]
             joined = joined.merge(
-                airports, on="arrival_airport", suffixes=(None, "_arrival")
+                airports, on=AirportDataColumns.ARRIVAL_AIRPORT.value, suffixes=(None, "_arrival")
             )
             joined.drop(columns=["departure_airport_arrival"], inplace=True)
 
-            joined = joined[joined["flight_number"].isin(flight_numbers)]
+            joined = joined[joined[ScheduleDataColumns.FLIGHT_NUMBER.value].isin(flight_numbers)]
             if joined.size == 0:
                 result = self.handle_invalid_flight(flight_numbers)
                 response = json.dumps(result)
@@ -91,7 +93,7 @@ class DriverService:
             joined[self.date_columns] = joined[self.date_columns].apply(
                 func=reformat_datetime_to_string, axis=1
             )
-            joined["distance_nm"] = joined.apply(
+            joined[MergedDataColumns.DISTANCE_IN_NM.value] = joined.apply(
                 func=get_distance_flown_in_nautical_miles, axis=1
             )
             result = joined[self.required_lookup_columns]
@@ -100,7 +102,7 @@ class DriverService:
             self._logger.error(msg)
             return msg
         flight_numbers_not_found = set(flight_numbers) - set(
-            result["flight_number"].values
+            result[ScheduleDataColumns.FLIGHT_NUMBER.value].values
         )
         result = result.to_dict("records")
         result.extend(self.handle_invalid_flight(flight_numbers_not_found))
@@ -118,18 +120,18 @@ class DriverService:
         fleet = self.inquiry_service.get_fleet()
 
         try:
-            fleet["aircraft_registration"] = fleet["Reg"]
-            joined = schedule.merge(fleet, on="aircraft_registration")
-            airports["departure_airport"] = airports["Airport"]
+            fleet[FleetDataColumns.AIRCRAFT_REGISTRATION.value] = fleet[FleetDataColumns.REG.value]
+            joined = schedule.merge(fleet, on=FleetDataColumns.AIRCRAFT_REGISTRATION.value)
+            airports[AirportDataColumns.DEPARTURE_AIRPORT.value] = airports[AirportDataColumns.AIRPORT.value]
             joined = joined.merge(
-                airports, on="departure_airport", suffixes=(None, "_departure")
+                airports, on=AirportDataColumns.DEPARTURE_AIRPORT.value, suffixes=(None, "_departure")
             )
-            airports["arrival_airport"] = airports["Airport"]
+            airports[AirportDataColumns.ARRIVAL_AIRPORT.value] = airports[AirportDataColumns.AIRPORT.value]
             joined = joined.merge(
-                airports, on="arrival_airport", suffixes=(None, "_arrival")
+                airports, on=AirportDataColumns.ARRIVAL_AIRPORT.value, suffixes=(None, "_arrival")
             )
             joined.drop(columns=["departure_airport_arrival"], inplace=True)
-            joined["distance_nm"] = joined.apply(
+            joined[MergedDataColumns.DISTANCE_IN_NM.value] = joined.apply(
                 func=get_distance_flown_in_nautical_miles, axis=1
             )
         except KeyError as msg:
@@ -168,7 +170,7 @@ class DriverService:
         try:
             command = args[1].lower()
 
-            if command == "lookup":
+            if command == AvailableInquiryCommands.LOOKUP.value:
                 try:
                     flight_numbers = args[2].split(",")
                     return self.lookup(flight_numbers)
@@ -176,7 +178,7 @@ class DriverService:
                     msg = "No flight number(s) passed."
                     self._logger.warning(msg)
                     return msg
-            elif command == "merge":
+            elif command == AvailableInquiryCommands.MERGE.value:
                 return self.merge()
             else:
                 msg = f"INVALID COMMAND - {command}. Try valid commands. For ex- lookup XXXXX,XXXXX or merge"

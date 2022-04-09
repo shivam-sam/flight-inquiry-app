@@ -1,4 +1,5 @@
-from .data_service import DataService
+from services.data_service import DataService
+from constants.constants import BlobStoreConstants as bsc
 
 
 class InquiryService:
@@ -14,17 +15,17 @@ class InquiryService:
 
     def set_schedule(self):
         self.__SCHEDULE = self.data_service.fetch_data_from_blob_store(
-            "python-case-study", "schedule.json"
+            bsc.CONTAINER_NAME.value, bsc.SCHEDULE_BLOB_NAME.value
         )
 
     def set_fleet(self):
         self.__FLEET = self.data_service.fetch_data_from_blob_store(
-            "python-case-study", "fleet.csv"
+            bsc.CONTAINER_NAME.value, bsc.FLEET_BLOB_NAME.value
         )
 
     def set_airports(self):
         self.__AIRPORTS = self.data_service.fetch_data_from_blob_store(
-            "python-case-study", "airports.csv"
+            bsc.CONTAINER_NAME.value, bsc.AIRPORTS_BLOB_NAME.value
         )
 
     def get_schedule(self):

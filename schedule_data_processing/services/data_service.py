@@ -4,6 +4,7 @@ from exceptions.exceptions import BlobClientException, BlobDataFetchException
 from models.blob_storage import BlobStorage
 from utils.common_utils import cleanup_temp_files
 from utils.common_utils import download_blob_into_local_file
+from constants.constants import FileExtensionConstants
 
 
 class DataService:
@@ -33,9 +34,9 @@ class DataService:
                 if download_blob_into_local_file(
                     blob_client=blob_client, file_name=blob_name
                 ):
-                    if blob_name.split(".")[-1] == "json":
+                    if blob_name.split(".")[-1] == FileExtensionConstants.JSON_FILETYPE.value:
                         data = pd.read_json(blob_name)
-                    elif blob_name.split(".")[-1] == "csv":
+                    elif blob_name.split(".")[-1] == FileExtensionConstants.CSV_FILETYPE.value:
                         data = pd.read_csv(blob_name)
         except BlobClientException as msg:
             return BlobDataFetchException(msg)

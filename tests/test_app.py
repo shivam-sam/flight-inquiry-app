@@ -4,6 +4,8 @@ import pandas as pd
 from unittest import mock
 import os
 import json
+from schedule_data_processing.constants.constants import (FileExtensionConstants, AvailableInquiryCommands,
+                                                          ScheduleDataColumns)
 
 
 def get_file_path(folder_name, file_name):
@@ -13,9 +15,9 @@ def get_file_path(folder_name, file_name):
 
 
 def test_data(file_path):
-    if file_path.split(".")[-1] == "json":
+    if file_path.split(".")[-1] == FileExtensionConstants.JSON_FILETYPE.value:
         return pd.read_json(file_path)
-    elif file_path.split(".")[-1] == "csv":
+    elif file_path.split(".")[-1] == FileExtensionConstants.CSV_FILETYPE.value:
         return pd.read_csv(file_path)
     else:
         return pd.DataFrame()
@@ -38,7 +40,7 @@ class TestCLI(unittest.TestCase):
     )
     def test_lookup_with_valid_invalid_flights(self):
         flight_numbers = "ZG2361,ZG5001,AAAAAA,CCCCC"
-        response = main(["schedule_data_processing/app.py", "lookup", flight_numbers])
+        response = main(["schedule_data_processing/app.py", AvailableInquiryCommands.LOOKUP.value, flight_numbers])
         actual_response = json.loads(response)
 
         flight_numbers = flight_numbers.split(",")
@@ -49,15 +51,16 @@ class TestCLI(unittest.TestCase):
 
         assert len(flight_numbers) == len(actual_response)
         for row in actual_response:
-            assert row["flight_number"] in flight_numbers
-        assert actual_response.sort(key=lambda x: x['flight_number']) == expected_response.sort(key=lambda x: x['flight_number'])
+            assert row[ScheduleDataColumns.FLIGHT_NUMBER.value] in flight_numbers
+        assert (actual_response.sort(key=lambda x: x[ScheduleDataColumns.FLIGHT_NUMBER.value]) ==
+                expected_response.sort(key=lambda x: x[ScheduleDataColumns.FLIGHT_NUMBER.value]))
 
     @mock.patch(
         "services.data_service.DataService.fetch_data_from_blob_store", fetch_blob_data
     )
     def test_lookup_with_invalid_flights(self):
         flight_numbers = "ZG2361ZG5001,AAAAAA,CCCCC"
-        response = main(["schedule_data_processing/app.py", "lookup", flight_numbers])
+        response = main(["schedule_data_processing/app.py", AvailableInquiryCommands.LOOKUP.value, flight_numbers])
         actual_response = json.loads(response)
 
         flight_numbers = flight_numbers.split(",")
@@ -68,12 +71,13 @@ class TestCLI(unittest.TestCase):
 
         assert len(flight_numbers) == len(actual_response)
         for row in actual_response:
-            assert row["flight_number"] in flight_numbers
-        assert actual_response.sort(key=lambda x: x['flight_number']) == expected_response.sort(key=lambda x: x['flight_number'])
+            assert row[ScheduleDataColumns.FLIGHT_NUMBER.value] in flight_numbers
+        assert (actual_response.sort(key=lambda x: x[ScheduleDataColumns.FLIGHT_NUMBER.value]) ==
+                expected_response.sort(key=lambda x: x[ScheduleDataColumns.FLIGHT_NUMBER.value]))
 
     @mock.patch(
         "services.data_service.DataService.fetch_data_from_blob_store", fetch_blob_data
     )
     def test_merge(self):
-        response = main(["schedule_data_processing/app.py", "merge"])
+        response = main(["schedule_data_processing/app.py", AvailableInquiryCommands.MERGE.value])
         assert response == "Output File name: output.csv"
