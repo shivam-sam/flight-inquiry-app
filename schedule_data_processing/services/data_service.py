@@ -27,8 +27,12 @@ class DataService:
         """
         data = pd.DataFrame()
         try:
-            with self.blob_storage.get_client(container_name=container_name, blob_name=blob_name) as blob_client:
-                if download_blob_into_local_file(blob_client=blob_client, file_name=blob_name):
+            with self.blob_storage.get_client(
+                container_name=container_name, blob_name=blob_name
+            ) as blob_client:
+                if download_blob_into_local_file(
+                    blob_client=blob_client, file_name=blob_name
+                ):
                     if blob_name.split(".")[-1] == "json":
                         data = pd.read_json(blob_name)
                     elif blob_name.split(".")[-1] == "csv":

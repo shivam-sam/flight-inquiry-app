@@ -33,23 +33,28 @@ def fetch_blob_data(data_service_obj, container_name, blob_name):
 
 
 class TestCLI(unittest.TestCase):
-
-    @mock.patch('services.data_service.DataService.fetch_data_from_blob_store', fetch_blob_data)
+    @mock.patch(
+        "services.data_service.DataService.fetch_data_from_blob_store", fetch_blob_data
+    )
     def test_lookup(self):
-        flight_numbers = 'ZG2361,ZG5001,AAAAAA,CCCCC'
-        response = main(['schedule_data_processing/app.py', 'lookup', flight_numbers])
+        flight_numbers = "ZG2361,ZG5001,AAAAAA,CCCCC"
+        response = main(["schedule_data_processing/app.py", "lookup", flight_numbers])
         actual_response = json.loads(response)
 
         flight_numbers = flight_numbers.split(",")
-        expected_response_json_file_path = get_file_path("expected_data", "lookup_expected_response.json")
+        expected_response_json_file_path = get_file_path(
+            "expected_data", "lookup_expected_response.json"
+        )
         expected_response = read_json_data(expected_response_json_file_path)
 
         assert len(flight_numbers) == len(actual_response)
         for row in actual_response:
-            assert row['flight_number'] in flight_numbers
+            assert row["flight_number"] in flight_numbers
         assert actual_response == expected_response
 
-    @mock.patch('services.data_service.DataService.fetch_data_from_blob_store', fetch_blob_data)
+    @mock.patch(
+        "services.data_service.DataService.fetch_data_from_blob_store", fetch_blob_data
+    )
     def test_merge(self):
-        response = main(['schedule_data_processing/app.py', 'merge'])
+        response = main(["schedule_data_processing/app.py", "merge"])
         assert response == "Output File name: output.csv"

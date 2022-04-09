@@ -7,8 +7,7 @@ except ImportError:
 
 
 def main(args):
-    """Main function to create instance of the driver class.
-    """
+    """Main function to create instance of the driver class."""
     driver_service_obj = DriverService()
     return driver_service_obj.fetch_info(args)
 

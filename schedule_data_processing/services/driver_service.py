@@ -35,7 +35,7 @@ class DriverService:
         "scheduled_departure_time",
         "scheduled_takeoff_time",
         "scheduled_landing_time",
-        "scheduled_arrival_time"
+        "scheduled_arrival_time",
     ]
 
     def __init__(self):
@@ -48,8 +48,10 @@ class DriverService:
         Configures the logger object.
         """
         self._logger.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s - %(name)s(%(lineno)s) - <<%(levelname)s>> - %(message)s')
-        file_handler = logging.FileHandler('log.txt')
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s(%(lineno)s) - <<%(levelname)s>> - %(message)s"
+        )
+        file_handler = logging.FileHandler("log.txt")
         file_handler.setFormatter(formatter)
         self._logger.addHandler(file_handler)
 
@@ -70,22 +72,37 @@ class DriverService:
             fleet["aircraft_registration"] = fleet["Reg"]
             joined = schedule.merge(fleet, on="aircraft_registration")
             airports["departure_airport"] = airports["Airport"]
-            joined = joined.merge(airports, on="departure_airport", suffixes=(None, "_departure"))
+            joined = joined.merge(
+                airports, on="departure_airport", suffixes=(None, "_departure")
+            )
             airports["arrival_airport"] = airports["Airport"]
-            joined = joined.merge(airports, on="arrival_airport", suffixes=(None, "_arrival"))
+            joined = joined.merge(
+                airports, on="arrival_airport", suffixes=(None, "_arrival")
+            )
             joined.drop(columns=["departure_airport_arrival"], inplace=True)
             joined = joined[joined["flight_number"].isin(flight_numbers)]
-            joined[self.date_columns] = joined[self.date_columns].apply(func=reformat_datetime_to_string, axis=1)
-            joined["distance_nm"] = joined.apply(func=get_distance_flown_in_nautical_miles, axis=1)
+            joined[self.date_columns] = joined[self.date_columns].apply(
+                func=reformat_datetime_to_string, axis=1
+            )
+            joined["distance_nm"] = joined.apply(
+                func=get_distance_flown_in_nautical_miles, axis=1
+            )
             result = joined[self.required_lookup_columns]
         except KeyError as msg:
             msg = f"FAILED - Lookup. {msg} - column not found"
             self._logger.error(msg)
             return msg
-        flight_numbers_not_found = set(flight_numbers) - set(result['flight_number'].values)
+        flight_numbers_not_found = set(flight_numbers) - set(
+            result["flight_number"].values
+        )
         result = result.to_dict("records")
         for invalid_flight_number in flight_numbers_not_found:
-            result.append({"flight_number": f"{invalid_flight_number}", "error": "Flight not found in schedule"})
+            result.append(
+                {
+                    "flight_number": f"{invalid_flight_number}",
+                    "error": "Flight not found in schedule",
+                }
+            )
         response = json.dumps(result)
         self._logger.info(f"SUCCESS - Lookup. Response: {response}")
         return response
@@ -103,11 +120,17 @@ class DriverService:
             fleet["aircraft_registration"] = fleet["Reg"]
             joined = schedule.merge(fleet, on="aircraft_registration")
             airports["departure_airport"] = airports["Airport"]
-            joined = joined.merge(airports, on="departure_airport", suffixes=(None, "_departure"))
+            joined = joined.merge(
+                airports, on="departure_airport", suffixes=(None, "_departure")
+            )
             airports["arrival_airport"] = airports["Airport"]
-            joined = joined.merge(airports, on="arrival_airport", suffixes=(None, "_arrival"))
+            joined = joined.merge(
+                airports, on="arrival_airport", suffixes=(None, "_arrival")
+            )
             joined.drop(columns=["departure_airport_arrival"], inplace=True)
-            joined["distance_nm"] = joined.apply(func=get_distance_flown_in_nautical_miles, axis=1)
+            joined["distance_nm"] = joined.apply(
+                func=get_distance_flown_in_nautical_miles, axis=1
+            )
         except KeyError as msg:
             msg = f"FAILED - Merge. {msg} - column not found"
             self._logger.error(msg)

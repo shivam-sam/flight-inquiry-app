@@ -31,7 +31,9 @@ def download_blob_into_local_file(blob_client, file_name):
             blob_client.download_blob().readinto(f)
         return True
     except Exception as e:
-        raise BlobClientException(f"Problem downloading blob file and replicating in local storage. error message: {e}")
+        raise BlobClientException(
+            f"Problem downloading blob file and replicating in local storage. error message: {e}"
+        )
 
 
 def get_distance_flown_in_nautical_miles(row):

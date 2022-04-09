@@ -13,13 +13,19 @@ class InquiryService:
         self.__AIRPORTS = None
 
     def set_schedule(self):
-        self.__SCHEDULE = self.data_service.fetch_data_from_blob_store("python-case-study", "schedule.json")
+        self.__SCHEDULE = self.data_service.fetch_data_from_blob_store(
+            "python-case-study", "schedule.json"
+        )
 
     def set_fleet(self):
-        self.__FLEET = self.data_service.fetch_data_from_blob_store("python-case-study", "fleet.csv")
+        self.__FLEET = self.data_service.fetch_data_from_blob_store(
+            "python-case-study", "fleet.csv"
+        )
 
     def set_airports(self):
-        self.__AIRPORTS = self.data_service.fetch_data_from_blob_store("python-case-study", "airports.csv")
+        self.__AIRPORTS = self.data_service.fetch_data_from_blob_store(
+            "python-case-study", "airports.csv"
+        )
 
     def get_schedule(self):
         return self.__SCHEDULE
