@@ -49,13 +49,14 @@ class DriverService:
         """
         Configures the logger object.
         """
-        self._logger.setLevel(logging.INFO)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s(%(lineno)s) - <<%(levelname)s>> - %(message)s"
-        )
-        file_handler = logging.FileHandler("log.txt")
-        file_handler.setFormatter(formatter)
-        self._logger.addHandler(file_handler)
+        if not self._logger.hasHandlers():
+            self._logger.setLevel(logging.INFO)
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s(%(lineno)s) - <<%(levelname)s>> - %(message)s"
+            )
+            file_handler = logging.FileHandler("log.txt")
+            file_handler.setFormatter(formatter)
+            self._logger.addHandler(file_handler)
 
     def lookup(self, flight_numbers):
         """
@@ -175,7 +176,7 @@ class DriverService:
                     flight_numbers = args[2].split(",")
                     return self.lookup(flight_numbers)
                 except IndexError:
-                    msg = "No flight number(s) passed."
+                    msg = "No flight number(s) passed in lookup command."
                     self._logger.warning(msg)
                     return msg
             elif command == AvailableInquiryCommands.MERGE.value:
